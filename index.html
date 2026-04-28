@@ -3,143 +3,156 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
   <title>Smart Task Planner</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
     rel="stylesheet"
   >
 
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
-  <div class="background-blur blur-one"></div>
-  <div class="background-blur blur-two"></div>
+  <div class="bg-circle circle-one"></div>
+  <div class="bg-circle circle-two"></div>
+  <div class="bg-circle circle-three"></div>
 
   <main class="app">
+    <header class="top-bar">
+      <div class="badge">🚀 Productivity App</div>
+      <button id="soundToggleBtn" class="sound-btn" type="button">🔊 Sound On</button>
+    </header>
+
     <section class="hero">
-      <span class="tag">✨ Productivity App</span>
-
+      <div class="hero-icon">☑️</div>
       <h1>Smart Task Planner</h1>
-
-      <p>
-        Plan your day, stay focused, and get alerts when you miss important tasks.
-      </p>
+      <p>Plan your day, stay focused, and get alerts when you miss important tasks.</p>
     </section>
 
-    <section class="planner-card">
+    <section class="glass-panel">
       <form id="taskForm" class="task-form">
-        <div class="input-group">
+        <div class="form-field task-name-field">
           <label for="taskInput">Task Name</label>
-          <input
-            type="text"
-            id="taskInput"
-            placeholder="What do you want to do today?"
-            autocomplete="off"
-            required
-          />
+          <div class="input-wrap">
+            <span class="field-icon">▣</span>
+            <input
+              id="taskInput"
+              type="text"
+              placeholder="What do you want to do today?"
+              autocomplete="off"
+              required
+            />
+          </div>
         </div>
 
-        <div class="input-group">
+        <div class="form-field">
           <label for="priorityInput">Priority</label>
-          <select id="priorityInput">
-            <option value="Low">Low Priority</option>
-            <option value="Medium" selected>Medium Priority</option>
-            <option value="High">High Priority</option>
-          </select>
+          <div class="input-wrap">
+            <span class="field-icon">⚑</span>
+            <select id="priorityInput">
+              <option value="Low">Low Priority</option>
+              <option value="Medium" selected>Medium Priority</option>
+              <option value="High">High Priority</option>
+            </select>
+          </div>
         </div>
 
-        <div class="input-group">
+        <div class="form-field">
           <label for="dateInput">Due Date</label>
-          <input type="date" id="dateInput" />
+          <div class="input-wrap">
+            <span class="field-icon">▣</span>
+            <input id="dateInput" type="date" />
+          </div>
         </div>
 
-        <div class="input-group">
+        <div class="form-field">
           <label for="timeInput">Due Time</label>
-          <input type="time" id="timeInput" />
+          <div class="input-wrap">
+            <span class="field-icon">◷</span>
+            <input id="timeInput" type="time" />
+          </div>
         </div>
 
-        <div class="input-group button-group">
+        <div class="form-field add-field">
           <label>&nbsp;</label>
-          <button type="submit" class="add-btn">+ Add Task</button>
+          <button class="add-btn" type="submit">+ Add Task</button>
         </div>
       </form>
 
-      <section class="dashboard">
-        <div class="stats-grid">
-          <div class="stat-box">
-            <span class="stat-icon">📋</span>
-            <div>
-              <p>Total Tasks</p>
-              <h3 id="totalTasks">0</h3>
-            </div>
+      <section class="stats-grid">
+        <article class="stat-card total-card">
+          <div class="stat-icon">📋</div>
+          <div>
+            <p>Total Tasks</p>
+            <h2 id="totalTasks">0</h2>
           </div>
+        </article>
 
-          <div class="stat-box">
-            <span class="stat-icon">✅</span>
-            <div>
-              <p>Completed</p>
-              <h3 id="completedTasks">0</h3>
-            </div>
+        <article class="stat-card completed-card">
+          <div class="stat-icon">✅</div>
+          <div>
+            <p>Completed</p>
+            <h2 id="completedTasks">0</h2>
           </div>
+        </article>
 
-          <div class="stat-box">
-            <span class="stat-icon">⏳</span>
-            <div>
-              <p>Pending</p>
-              <h3 id="pendingTasks">0</h3>
-            </div>
+        <article class="stat-card pending-card">
+          <div class="stat-icon">⌛</div>
+          <div>
+            <p>Pending</p>
+            <h2 id="pendingTasks">0</h2>
           </div>
+        </article>
 
-          <div class="stat-box missed-stat">
-            <span class="stat-icon">🚨</span>
-            <div>
-              <p>Missed</p>
-              <h3 id="missedTasks">0</h3>
-            </div>
+        <article class="stat-card missed-card">
+          <div class="stat-icon">🚨</div>
+          <div>
+            <p>Missed</p>
+            <h2 id="missedTasks">0</h2>
           </div>
+        </article>
+      </section>
+
+      <section class="progress-card">
+        <div class="progress-top">
+          <span>Overall Progress</span>
+          <strong id="progressText">0%</strong>
         </div>
 
-        <div class="progress-card">
-          <div class="progress-header">
-            <span>Overall Progress</span>
-            <span id="progressText">0%</span>
-          </div>
-
-          <div class="progress-bar">
-            <div id="progressFill" class="progress-fill"></div>
-          </div>
+        <div class="progress-track">
+          <div id="progressFill" class="progress-fill"></div>
         </div>
       </section>
 
-      <section class="tools">
-        <div class="search-box">
-          <input
-            type="text"
-            id="searchInput"
-            placeholder="Search your tasks..."
-          />
+      <section class="task-tools">
+        <div class="search-wrap">
+          <span>⌕</span>
+          <input id="searchInput" type="text" placeholder="Search your tasks..." />
         </div>
 
         <div class="filters">
-          <button class="filter-btn active" data-filter="all">All</button>
-          <button class="filter-btn" data-filter="pending">Pending</button>
-          <button class="filter-btn" data-filter="completed">Completed</button>
-          <button class="filter-btn" data-filter="missed">Missed</button>
+          <button class="filter-btn active" type="button" data-filter="all">▦ All</button>
+          <button class="filter-btn" type="button" data-filter="pending">⌛ Pending</button>
+          <button class="filter-btn" type="button" data-filter="completed">✅ Completed</button>
+          <button class="filter-btn" type="button" data-filter="missed">🚨 Missed</button>
         </div>
       </section>
 
       <ul id="taskList" class="task-list"></ul>
 
-      <div id="emptyMessage" class="empty-state">
-        <div class="empty-icon">📝</div>
+      <div id="emptyState" class="empty-state">
+        <div>📝</div>
         <h3>No tasks found</h3>
-        <p>Add your first task or change your filter.</p>
+        <p>Add a task or change your filter.</p>
       </div>
     </section>
+
+    <footer class="footer">
+      © 2026 Smart Task Planner. Stay productive! 💜
+    </footer>
   </main>
 
   <script src="script.js"></script>

@@ -5,7 +5,7 @@ const dateInput = document.getElementById("dateInput");
 const timeInput = document.getElementById("timeInput");
 const searchInput = document.getElementById("searchInput");
 const taskList = document.getElementById("taskList");
-const emptyMessage = document.getElementById("emptyMessage");
+const emptyState = document.getElementById("emptyState");
 
 const totalTasks = document.getElementById("totalTasks");
 const completedTasks = document.getElementById("completedTasks");
@@ -15,15 +15,45 @@ const progressText = document.getElementById("progressText");
 const progressFill = document.getElementById("progressFill");
 
 const filterButtons = document.querySelectorAll(".filter-btn");
+const soundToggleBtn = document.getElementById("soundToggleBtn");
 
-let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
 let currentFilter = "all";
-
-/* =========================
-   Alert ringtone setup
-========================= */
-
 let audioContext = null;
+
+let soundEnabled = JSON.parse(localStorage.getItem("soundEnabled"));
+if (soundEnabled === null) {
+  soundEnabled = true;
+}
+
+let tasks = JSON.parse(localStorage.getItem("smartTaskPlannerTasks")) || [];
+
+/*
+  This normalizes old saved tasks from earlier versions.
+  So your app will not break if localStorage has older task structures.
+*/
+tasks = tasks.map(task => {
+  return {
+    id: task.id || Date.now() + Math.random(),
+    title: task.title || task.text || "Untitled Task",
+    priority: task.priority || "Medium",
+    dueDate: task.dueDate || task.date || "",
+    dueTime: task.dueTime || task.time || "",
+    completed: Boolean(task.completed || task.done),
+    missedAlertShown: Boolean(task.missedAlertShown || task.alerted)
+  };
+});
+
+saveTasks();
+
+function saveTasks() {
+  localStorage.setItem("smartTaskPlannerTasks", JSON.stringify(tasks));
+}
+
+function escapeHTML(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
 
 function getAudioContext() {
   const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -39,7 +69,7 @@ function getAudioContext() {
   return audioContext;
 }
 
-function unlockAlertSound() {
+function unlockSound() {
   const context = getAudioContext();
 
   if (!context) {
@@ -47,9 +77,7 @@ function unlockAlertSound() {
   }
 
   if (context.state === "suspended") {
-    context.resume().catch(() => {
-      console.log("Audio could not be unlocked yet.");
-    });
+    context.resume().catch(() => {});
   }
 }
 
@@ -61,81 +89,53 @@ function playTone(context, frequency, startTime, duration, volume) {
   oscillator.frequency.setValueAtTime(frequency, startTime);
 
   gainNode.gain.setValueAtTime(0.0001, startTime);
-  gainNode.gain.exponentialRampToValueAtTime(volume, startTime + 0.03);
+  gainNode.gain.exponentialRampToValueAtTime(volume, startTime + 0.025);
   gainNode.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
 
   oscillator.connect(gainNode);
   gainNode.connect(context.destination);
 
   oscillator.start(startTime);
-  oscillator.stop(startTime + duration + 0.05);
+  oscillator.stop(startTime + duration + 0.04);
 }
 
 function playMissedTaskRingtone() {
+  if (!soundEnabled) {
+    return;
+  }
+
   const context = getAudioContext();
 
   if (!context) {
     return;
   }
 
-  if (context.state === "suspended") {
-    context.resume().then(() => {
-      playRingtonePattern(context);
-    }).catch(() => {
-      console.log("Browser blocked the alert sound.");
-    });
+  const playPattern = () => {
+    const now = context.currentTime + 0.05;
 
+    playTone(context, 880, now, 0.18, 0.22);
+    playTone(context, 660, now + 0.25, 0.18, 0.22);
+    playTone(context, 880, now + 0.50, 0.18, 0.22);
+    playTone(context, 660, now + 0.75, 0.18, 0.22);
+    playTone(context, 1046, now + 1.05, 0.35, 0.25);
+  };
+
+  if (context.state === "suspended") {
+    context.resume().then(playPattern).catch(() => {});
     return;
   }
 
-  playRingtonePattern(context);
+  playPattern();
 }
 
-function playRingtonePattern(context) {
-  const now = context.currentTime + 0.05;
-
-  playTone(context, 880, now, 0.18, 0.22);
-  playTone(context, 660, now + 0.25, 0.18, 0.22);
-  playTone(context, 880, now + 0.50, 0.18, 0.22);
-  playTone(context, 660, now + 0.75, 0.18, 0.22);
-  playTone(context, 1046, now + 1.05, 0.35, 0.24);
-}
-
-/* 
-  Browsers usually allow sound only after the user interacts
-  with the page at least once.
-*/
-document.addEventListener("click", unlockAlertSound, { once: true });
-document.addEventListener("keydown", unlockAlertSound, { once: true });
-
-/* =========================
-   Task planner logic
-========================= */
-
-function saveTasks() {
-  localStorage.setItem("tasks", JSON.stringify(tasks));
-}
-
-function escapeHTML(text) {
-  const div = document.createElement("div");
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-function requestNotificationPermission() {
-  if ("Notification" in window && Notification.permission === "default") {
-    Notification.requestPermission();
+function updateSoundButton() {
+  if (soundEnabled) {
+    soundToggleBtn.textContent = "🔊 Sound On";
+    soundToggleBtn.classList.remove("off");
+  } else {
+    soundToggleBtn.textContent = "🔇 Sound Off";
+    soundToggleBtn.classList.add("off");
   }
-}
-
-function getSafePriority(priority) {
-  const validPriorities = ["Low", "Medium", "High"];
-
-  if (validPriorities.includes(priority)) {
-    return priority;
-  }
-
-  return "Medium";
 }
 
 function getDueDateTime(task) {
@@ -178,63 +178,22 @@ function formatDateTime(dueDate, dueTime) {
   });
 
   if (!dueTime) {
-    return `${formattedDate} at 11:59 PM`;
+    return `${formattedDate} at 23:59`;
   }
 
   return `${formattedDate} at ${dueTime}`;
 }
 
-function showMissedAlert(missedList) {
-  const taskNames = missedList
-    .map(task => `• ${task.title}`)
-    .join("\n");
-
-  playMissedTaskRingtone();
-
-  if ("Notification" in window && Notification.permission === "granted") {
-    const notificationText = missedList
-      .map(task => task.title)
-      .join(", ");
-
-    new Notification("Missed Task Alert", {
-      body: `Overdue task(s): ${notificationText}`
-    });
+function getPriorityClass(priority) {
+  if (priority === "Low") {
+    return "priority-low";
   }
 
-  setTimeout(() => {
-    alert(`Missed Task Alert!\n\nYou missed these task(s):\n${taskNames}`);
-  }, 250);
-}
-
-function checkMissedTasks() {
-  const newlyMissedTasks = tasks.filter(task => {
-    return isTaskMissed(task) && !task.missedAlertShown;
-  });
-
-  if (newlyMissedTasks.length === 0) {
-    updateStats();
-    return;
+  if (priority === "High") {
+    return "priority-high";
   }
 
-  showMissedAlert(newlyMissedTasks);
-
-  tasks = tasks.map(task => {
-    const hasJustBeenMissed = newlyMissedTasks.some(
-      missedTask => missedTask.id === task.id
-    );
-
-    if (hasJustBeenMissed) {
-      return {
-        ...task,
-        missedAlertShown: true
-      };
-    }
-
-    return task;
-  });
-
-  saveTasks();
-  renderTasks();
+  return "priority-medium";
 }
 
 function addTask(title, priority, dueDate, dueTime) {
@@ -274,7 +233,6 @@ function toggleTask(id) {
 
   saveTasks();
   renderTasks();
-  checkMissedTasks();
 }
 
 function editTask(id) {
@@ -284,7 +242,7 @@ function editTask(id) {
     return;
   }
 
-  const updatedTitle = prompt("Edit your task:", task.title);
+  const updatedTitle = prompt("Edit task name:", task.title);
 
   if (updatedTitle === null) {
     return;
@@ -313,25 +271,29 @@ function editTask(id) {
 }
 
 function getFilteredTasks() {
-  const searchText = searchInput.value.toLowerCase();
+  const searchText = searchInput.value.toLowerCase().trim();
 
   return tasks.filter(task => {
-    const matchesSearch = task.title.toLowerCase().includes(searchText);
     const missed = isTaskMissed(task);
+    const matchesSearch = task.title.toLowerCase().includes(searchText);
 
-    if (currentFilter === "completed") {
-      return task.completed && matchesSearch;
+    if (!matchesSearch) {
+      return false;
     }
 
     if (currentFilter === "pending") {
-      return !task.completed && !missed && matchesSearch;
+      return !task.completed && !missed;
+    }
+
+    if (currentFilter === "completed") {
+      return task.completed;
     }
 
     if (currentFilter === "missed") {
-      return missed && matchesSearch;
+      return missed;
     }
 
-    return matchesSearch;
+    return true;
   });
 }
 
@@ -339,11 +301,7 @@ function updateStats() {
   const total = tasks.length;
   const completed = tasks.filter(task => task.completed).length;
   const missed = tasks.filter(task => isTaskMissed(task)).length;
-
-  const pending = tasks.filter(task => {
-    return !task.completed && !isTaskMissed(task);
-  }).length;
-
+  const pending = tasks.filter(task => !task.completed && !isTaskMissed(task)).length;
   const progress = total === 0 ? 0 : Math.round((completed / total) * 100);
 
   totalTasks.textContent = total;
@@ -361,48 +319,46 @@ function renderTasks() {
   const filteredTasks = getFilteredTasks();
 
   if (filteredTasks.length === 0) {
-    emptyMessage.classList.remove("hidden");
+    emptyState.classList.remove("hidden");
   } else {
-    emptyMessage.classList.add("hidden");
+    emptyState.classList.add("hidden");
   }
 
   filteredTasks.forEach(task => {
     const missed = isTaskMissed(task);
-    const safePriority = getSafePriority(task.priority);
+    const priorityClass = getPriorityClass(task.priority);
 
     const li = document.createElement("li");
     li.className = `task-item ${task.completed ? "completed" : ""} ${missed ? "missed" : ""}`;
 
+    const dueLabel = missed ? "Missed:" : "Due:";
+    const statusPill = task.completed
+      ? `<span class="pill completed-pill">✅ Completed</span>`
+      : missed
+        ? `<span class="pill missed-pill">🚨 Missed</span>`
+        : "";
+
     li.innerHTML = `
       <input
-        type="checkbox"
         class="task-checkbox"
+        type="checkbox"
         ${task.completed ? "checked" : ""}
-        aria-label="Mark task as complete"
+        aria-label="Mark task completed"
       />
 
-      <div class="task-info">
-        <p class="task-title">${escapeHTML(task.title)}</p>
+      <div class="task-content">
+        <div class="task-title">${escapeHTML(task.title)}</div>
 
         <div class="task-meta">
-          <span class="meta-pill priority ${safePriority}">
-            ${safePriority}
-          </span>
-
-          <span class="meta-pill due-date ${missed ? "missed-date" : ""}">
-            ${missed ? "Missed: " : "Due: "}
-            ${formatDateTime(task.dueDate, task.dueTime)}
-          </span>
-
-          ${task.completed ? `<span class="meta-pill completed-pill">Completed</span>` : ""}
-
-          ${missed ? `<span class="meta-pill missed-pill">Missed</span>` : ""}
+          <span class="pill ${priorityClass}">⚑ ${task.priority}</span>
+          <span class="pill ${missed ? "missed-pill" : "due-pill"}">◷ ${dueLabel} ${formatDateTime(task.dueDate, task.dueTime)}</span>
+          ${statusPill}
         </div>
       </div>
 
-      <div class="task-actions">
-        <button class="edit-btn">Edit</button>
-        <button class="delete-btn">Delete</button>
+      <div class="actions">
+        <button class="action-btn edit-btn" type="button">✎ Edit</button>
+        <button class="action-btn delete-btn" type="button">🗑 Delete</button>
       </div>
     `;
 
@@ -420,11 +376,53 @@ function renderTasks() {
   updateStats();
 }
 
+function showMissedAlert(missedList) {
+  const taskNames = missedList
+    .map(task => `• ${task.title}`)
+    .join("\n");
+
+  playMissedTaskRingtone();
+
+  setTimeout(() => {
+    alert(`Missed Task Alert!\n\nYou missed these task(s):\n${taskNames}`);
+  }, 250);
+}
+
+function checkMissedTasks() {
+  const newlyMissedTasks = tasks.filter(task => {
+    return isTaskMissed(task) && !task.missedAlertShown;
+  });
+
+  if (newlyMissedTasks.length === 0) {
+    updateStats();
+    return;
+  }
+
+  showMissedAlert(newlyMissedTasks);
+
+  tasks = tasks.map(task => {
+    const shouldMarkAlertShown = newlyMissedTasks.some(missedTask => {
+      return missedTask.id === task.id;
+    });
+
+    if (shouldMarkAlertShown) {
+      return {
+        ...task,
+        missedAlertShown: true
+      };
+    }
+
+    return task;
+  });
+
+  saveTasks();
+  renderTasks();
+}
+
 taskForm.addEventListener("submit", event => {
   event.preventDefault();
 
-  requestNotificationPermission();
-  unlockAlertSound();
+  unlockSound();
 
   const title = taskInput.value.trim();
   const priority = priorityInput.value;
@@ -432,7 +430,7 @@ taskForm.addEventListener("submit", event => {
   const dueTime = timeInput.value;
 
   if (title === "") {
-    alert("Please enter a task.");
+    alert("Please enter a task name.");
     return;
   }
 
@@ -459,6 +457,17 @@ filterButtons.forEach(button => {
   });
 });
 
+soundToggleBtn.addEventListener("click", () => {
+  soundEnabled = !soundEnabled;
+  localStorage.setItem("soundEnabled", JSON.stringify(soundEnabled));
+  updateSoundButton();
+  unlockSound();
+});
+
+document.addEventListener("click", unlockSound, { once: true });
+document.addEventListener("keydown", unlockSound, { once: true });
+
+updateSoundButton();
 renderTasks();
 checkMissedTasks();
 
