@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Smart Task Planner</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="background-blur blur-one"></div>
+  <div class="background-blur blur-two"></div>
+
+  <main class="app">
+    <section class="hero">
+      <span class="tag">✨ Productivity App</span>
+
+      <h1>Smart Task Planner</h1>
+
+      <p>
+        Plan your day, stay focused, and get alerts when you miss important tasks.
+      </p>
+    </section>
+
+    <section class="planner-card">
+      <form id="taskForm" class="task-form">
+        <div class="input-group">
+          <label for="taskInput">Task Name</label>
+          <input
+            type="text"
+            id="taskInput"
+            placeholder="What do you want to do today?"
+            autocomplete="off"
+            required
+          />
+        </div>
+
+        <div class="input-group">
+          <label for="priorityInput">Priority</label>
+          <select id="priorityInput">
+            <option value="Low">Low Priority</option>
+            <option value="Medium" selected>Medium Priority</option>
+            <option value="High">High Priority</option>
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label for="dateInput">Due Date</label>
+          <input type="date" id="dateInput" />
+        </div>
+
+        <div class="input-group">
+          <label for="timeInput">Due Time</label>
+          <input type="time" id="timeInput" />
+        </div>
+
+        <div class="input-group button-group">
+          <label>&nbsp;</label>
+          <button type="submit" class="add-btn">+ Add Task</button>
+        </div>
+      </form>
+
+      <section class="dashboard">
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="stat-icon">📋</span>
+            <div>
+              <p>Total Tasks</p>
+              <h3 id="totalTasks">0</h3>
+            </div>
+          </div>
+
+          <div class="stat-box">
+            <span class="stat-icon">✅</span>
+            <div>
+              <p>Completed</p>
+              <h3 id="completedTasks">0</h3>
+            </div>
+          </div>
+
+          <div class="stat-box">
+            <span class="stat-icon">⏳</span>
+            <div>
+              <p>Pending</p>
+              <h3 id="pendingTasks">0</h3>
+            </div>
+          </div>
+
+          <div class="stat-box missed-stat">
+            <span class="stat-icon">🚨</span>
+            <div>
+              <p>Missed</p>
+              <h3 id="missedTasks">0</h3>
+            </div>
+          </div>
+        </div>
+
+        <div class="progress-card">
+          <div class="progress-header">
+            <span>Overall Progress</span>
+            <span id="progressText">0%</span>
+          </div>
+
+          <div class="progress-bar">
+            <div id="progressFill" class="progress-fill"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tools">
+        <div class="search-box">
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Search your tasks..."
+          />
+        </div>
+
+        <div class="filters">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="pending">Pending</button>
+          <button class="filter-btn" data-filter="completed">Completed</button>
+          <button class="filter-btn" data-filter="missed">Missed</button>
+        </div>
+      </section>
+
+      <ul id="taskList" class="task-list"></ul>
+
+      <div id="emptyMessage" class="empty-state">
+        <div class="empty-icon">📝</div>
+        <h3>No tasks found</h3>
+        <p>Add your first task or change your filter.</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
