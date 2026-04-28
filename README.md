@@ -48,7 +48,14 @@ smart-task-planner/
 ├── style.css
 ├── script.js
 └── README.md
+```
+
+## Live Demo
+
+https://e22001.github.io/smart-task-planner/
 
 ## Screenshot
 
 ![App Screenshot](screenshot.png)
+
+
