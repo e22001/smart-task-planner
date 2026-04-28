@@ -48,3 +48,7 @@ smart-task-planner/
 ├── style.css
 ├── script.js
 └── README.md
+
+## Screenshot
+
+![App Screenshot](screenshot.png)
